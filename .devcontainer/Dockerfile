@@ -46,6 +46,7 @@ RUN echo "Installing apt packages..." \
 	libgoogle-glog-dev \
 	libsuitesparse-dev \
 	python3.9-distutils \
+    python3-pip \
 	&& apt autoremove -y \
 	&& apt clean -y \
 	&& export DEBIAN_FRONTEND=dialog \
