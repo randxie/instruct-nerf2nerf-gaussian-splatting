@@ -1,0 +1,7 @@
+{
+    "name": "Instruct NERF2NERF",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "instruct-nerf2nerf",
+    "workspaceFolder": "/volume",
+    "shutdownAction": "stopCompose"
+}
