@@ -65,27 +65,27 @@ ENDIF(GLEW_FOUND)
 ##############
 ## Find ASSIMP
 ##############
-if (MSVC11 OR MSVC12)
-    set(assimp_set_arguments 
-        CHECK_CACHED_VAR ASSIMP_DIR PATH "Assimp_3.1_fix"
-    )
-elseif (MSVC14)
-    set(assimp_set_arguments 
-        CHECK_CACHED_VAR ASSIMP_DIR PATH "Assimp-4.1.0"
-    )
-else ()
-    message("There is no provided ASSIMP library for your version of MSVC")
-endif()
+# if (MSVC11 OR MSVC12)
+#     set(assimp_set_arguments 
+#         CHECK_CACHED_VAR ASSIMP_DIR PATH "Assimp_3.1_fix"
+#     )
+# elseif (MSVC14)
+#     set(assimp_set_arguments 
+#         CHECK_CACHED_VAR ASSIMP_DIR PATH "Assimp-4.1.0"
+#     )
+# else ()
+#     message("There is no provided ASSIMP library for your version of MSVC")
+# endif()
+#
+# sibr_addlibrary(NAME ASSIMP #VERBOSE ON
+#         MSVC11 "https://repo-sam.inria.fr/fungraph/dependencies/ibr-common/win3rdParty-MSVC11-splitted%20version/Assimp_3.1_fix.7z"
+#         MSVC12 "https://repo-sam.inria.fr/fungraph/dependencies/ibr-common/win3rdParty-MSVC11-splitted%20version/Assimp_3.1_fix.7z"
+#         MSVC14 "https://repo-sam.inria.fr/fungraph/dependencies/ibr-common/win3rdParty-MSVC15-splitted%20version/Assimp-4.1.0.7z"
+#         MULTI_SET
+#             ${assimp_set_arguments}
+# )
 
-sibr_addlibrary(NAME ASSIMP #VERBOSE ON
-        MSVC11 "https://repo-sam.inria.fr/fungraph/dependencies/ibr-common/win3rdParty-MSVC11-splitted%20version/Assimp_3.1_fix.7z"
-        MSVC12 "https://repo-sam.inria.fr/fungraph/dependencies/ibr-common/win3rdParty-MSVC11-splitted%20version/Assimp_3.1_fix.7z"
-        MSVC14 "https://repo-sam.inria.fr/fungraph/dependencies/ibr-common/win3rdParty-MSVC15-splitted%20version/Assimp-4.1.0.7z"
-        MULTI_SET
-            ${assimp_set_arguments}
-)
-
-find_package(ASSIMP REQUIRED)
+find_package(assimp REQUIRED PATHS "/usr/lib/x86_64-linux-gnu/cmake/assimp-5.2")
 include_directories(${ASSIMP_INCLUDE_DIR})
 
 ################

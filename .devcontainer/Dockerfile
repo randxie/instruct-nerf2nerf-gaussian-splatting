@@ -25,6 +25,13 @@ RUN echo "Installing apt packages..." \
 	libcgal-dev \
 	libgdbm-dev \
 	libglew-dev \
+    libboost-all-dev \
+    libgtk-3-dev \
+    libavdevice-dev \
+    libavcodec-dev \
+    libxxf86vm-dev \
+    libembree-dev \
+    libassimp-dev \
 	python3.9-dev \
 	qtbase5-dev \
 	checkinstall \
@@ -45,6 +52,9 @@ RUN echo "Installing apt packages..." \
 	libqt5opengl5-dev \
 	libgoogle-glog-dev \
 	libsuitesparse-dev \
+    libopencv-dev \
+    doxygen \
+    graphviz \
 	python3.9-distutils \
     python3-pip \
 	&& apt autoremove -y \
