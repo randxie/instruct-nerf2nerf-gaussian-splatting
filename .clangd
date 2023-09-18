@@ -1,0 +1,10 @@
+CompileFlags:
+  Add: [
+      -x, cuda, 
+      --cuda-gpu-arch=sm_80, 
+      -I/home/randxie/anaconda3/envs/vllm/lib/python3.9/site-packages/nvidia/cuda_runtime/include,
+      -I/home/randxie/anaconda3/envs/vllm/lib/python3.9/site-packages/torch/include,
+      -I/home/randxie/anaconda3/envs/vllm/lib/python3.9/site-packages/torch/include/torch/csrc/api/include,        
+      -I/home/randxie/anaconda3/envs/vllm/include
+    ]
+  Remove: [-Wall]
