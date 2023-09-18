@@ -1,0 +1,16 @@
+name: in2n
+channels:
+  - nvidia/label/cuda-11.7.1
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - cub
+  - cuda-nvcc
+  - cudnn=8.1.0
+  - libcusolver-dev
+  - libcusparse
+  - thrust
+  - pip
+  - pip:
+      - -r requirements.txt

@@ -3,8 +3,21 @@ CompileFlags:
       -x, cuda, 
       --cuda-gpu-arch=sm_80, 
       -I/home/randxie/anaconda3/envs/vllm/lib/python3.9/site-packages/nvidia/cuda_runtime/include,
+      -I/home/randxie/anaconda3/envs/vllm/lib/python3.9/site-packages/nvidia/cuda_cupti/include,
+      -I/home/randxie/anaconda3/envs/vllm/lib/python3.9/site-packages/numpy/core/include,
       -I/home/randxie/anaconda3/envs/vllm/lib/python3.9/site-packages/torch/include,
       -I/home/randxie/anaconda3/envs/vllm/lib/python3.9/site-packages/torch/include/torch/csrc/api/include,        
-      -I/home/randxie/anaconda3/envs/vllm/include
+      -I/home/randxie/anaconda3/envs/vllm/include,
+      -I/usr/include/c++/11/,
+      -I/usr/include/x86_64-linux-gnu/c++/11,
+      -I/usr/include/c++/11/backward,
+      -I/usr/lib/gcc/x86_64-linux-gnu/11/include,
+      -I/usr/local/include,
+      -I/usr/include/x86_64-linux-gnu,
+      -I/usr/include,
+      -std, c++17,
+      -stdlib, libc++,
     ]
-  Remove: [-Wall]
+  Remove: [
+      -Wall,
+    ]
