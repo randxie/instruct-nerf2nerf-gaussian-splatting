@@ -95,8 +95,8 @@ class InstructPix2Pix(nn.Module):
             pipe.unet.float()
             pipe.vae.float()
         else:
-            if self.device.index:
-                pipe.enable_model_cpu_offload(self.device.index)
+            if self.device == "cuda:1":
+                pipe.enable_model_cpu_offload(1)
             else:
                 pipe.enable_model_cpu_offload(0)
 

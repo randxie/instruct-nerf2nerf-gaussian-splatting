@@ -21,6 +21,7 @@ try:
 except ImportError:
     TENSORBOARD_FOUND = False
 
+from IPython.core.debugger import set_trace
 
 def training(
     dataset,
@@ -122,19 +123,20 @@ def training(
             original_image = viewpoint_cam.original_image.to(diff_device)
 
             edited_image = ip2p_model.edit_image(
-                text_embedding.to(diff_device),
-                image.to(diff_device),
-                original_image.to(diff_device),
+                text_embedding.to(diff_device, dtype=torch.float16),
+                image.to(diff_device, dtype=torch.float16).unsqueeze(0),
+                original_image.to(diff_device, dtype=torch.float16).unsqueeze(0),
             )
 
+            #edited_image = edited_image[0, ...].to(device, dtype=torch.float32)
             # resize to original image size (often not necessary)
-            if (edited_image.size() != rendered_image.size()):
-                edited_image = torch.nn.functional.interpolate(edited_image,
-                                                               size=rendered_image.size()[2:],
-                                                               mode='bilinear')
-
+            # if (edited_image.size() != image.size()):
+            #     edited_image = torch.nn.functional.interpolate(edited_image,
+            #                                                    size=image.size()[2:],
+            #                                                    mode='bilinear')
+            #set_trace()
             # write edited image to dataloader
-            self.datamanager.image_batch["image"][current_spot] = edited_image.squeeze().permute(1, 2, 0)
+            scene.updateTrainCameraImage(viewpoint_id, edited_image)
 
         iter_end.record()
 
@@ -270,14 +272,14 @@ if __name__ == "__main__":
     parser.add_argument('--port', type=int, default=6009)
     parser.add_argument('--debug_from', type=int, default=-1)
     parser.add_argument('--detect_anomaly', action='store_true', default=False)
-    parser.add_argument("--test_iterations", nargs="+", type=int, default=[7_000, 30_000])
-    parser.add_argument("--save_iterations", nargs="+", type=int, default=[7_000, 30_000])
+    parser.add_argument("--test_iterations", nargs="+", type=int, default=[2_00, 7_000, 30_000])
+    parser.add_argument("--save_iterations", nargs="+", type=int, default=[2_00, 7_000, 30_000])
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--checkpoint_iterations", nargs="+", type=int, default=[])
     parser.add_argument("--start_checkpoint", type=str, default=None)
 
     # ip2p parameters
-    parser.add_argument('--edit-rate', type=int, default=100)
+    parser.add_argument('--edit-rate', type=int, default=50)
 
     args = parser.parse_args(sys.argv[1:])
     args.save_iterations.append(args.iterations)
@@ -288,7 +290,7 @@ if __name__ == "__main__":
     safe_state(args.quiet)
 
     # Start GUI server, configure and run training
-    network_gui.init(args.ip, args.port)
+    #network_gui.init(args.ip, args.port)
     torch.autograd.set_detect_anomaly(args.detect_anomaly)
     training(
         lp.extract(args),
