@@ -54,9 +54,9 @@ def training(
     iter_start = torch.cuda.Event(enable_timing=True)
     iter_end = torch.cuda.Event(enable_timing=True)
 
-    ip2p_model = InstructPix2Pix(device=diff_device, num_train_timesteps=500)
+    ip2p_model = InstructPix2Pix(device=diff_device, num_train_timesteps=1000)
     text_embedding = ip2p_model.pipe._encode_prompt(
-        "Make it winter with snow",
+        "Turn the bear into a grizzly bear",
         device=diff_device,
         num_images_per_prompt=1,
         do_classifier_free_guidance=True,
@@ -288,13 +288,17 @@ def get_parser():
     parser.add_argument("--start_checkpoint", type=str, default=None)
 
     # ip2p parameters
-    parser.add_argument('--edit-rate', type=int, default=50)
+    parser.add_argument('--edit-rate', type=int, default=20)
 
     return parser
 
 
 if __name__ == "__main__":
     parser = get_parser()
+    lp = ModelParams(parser)
+    op = OptimizationParams(parser)
+    pp = PipelineParams(parser)
+
     args = parser.parse_args(sys.argv[1:])
     args.save_iterations.append(args.iterations)
 
@@ -307,9 +311,6 @@ if __name__ == "__main__":
     #network_gui.init(args.ip, args.port)
     torch.autograd.set_detect_anomaly(args.detect_anomaly)
 
-    lp = ModelParams(parser)
-    op = OptimizationParams(parser)
-    pp = PipelineParams(parser)
     training(
         lp.extract(args),
         op.extract(args),
