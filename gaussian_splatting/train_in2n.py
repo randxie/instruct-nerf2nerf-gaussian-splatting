@@ -14,6 +14,7 @@ from utils.general_utils import safe_state
 from utils.image_utils import psnr
 from utils.loss_utils import l1_loss, ssim
 from ip2p import InstructPix2Pix
+import matplotlib.pyplot as plt
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -52,9 +53,9 @@ def training(
     iter_start = torch.cuda.Event(enable_timing=True)
     iter_end = torch.cuda.Event(enable_timing=True)
 
-    ip2p_model = InstructPix2Pix(device=diff_device, num_train_timesteps=200)
+    ip2p_model = InstructPix2Pix(device=diff_device, num_train_timesteps=500)
     text_embedding = ip2p_model.pipe._encode_prompt(
-        "Turn the truck into red color",
+        "Make it winter with snow",
         device=diff_device,
         num_images_per_prompt=1,
         do_classifier_free_guidance=True,
@@ -110,7 +111,7 @@ def training(
         # gt_image = viewpoint_cam.original_image.cuda()
 
         # During NERF training, we will use the edited image edited by diffusion model as ground truth
-        gt_image = viewpoint_cam.edited_image.cuda()
+        gt_image = viewpoint_cam.image.cuda()
         Ll1 = l1_loss(image, gt_image)
         loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image))
         loss.backward()
@@ -118,25 +119,36 @@ def training(
         # every 50 iterations, do 1 image editing using instruct-pix2pix
         # edit an image every ``edit_rate`` steps
         if (iteration % args.edit_rate == 0):
+            with torch.no_grad():
+                # get original image from dataset
+                original_image = viewpoint_cam.original_image.to(diff_device)
 
-            # get original image from dataset
-            original_image = viewpoint_cam.original_image.to(diff_device)
+                edited_image = ip2p_model.edit_image(
+                    text_embedding.to(diff_device),
+                    image.to(diff_device, dtype=torch.float16).unsqueeze(0),
+                    original_image.to(diff_device, dtype=torch.float16).unsqueeze(0),
+                )
 
-            edited_image = ip2p_model.edit_image(
-                text_embedding.to(diff_device, dtype=torch.float16),
-                image.to(diff_device, dtype=torch.float16).unsqueeze(0),
-                original_image.to(diff_device, dtype=torch.float16).unsqueeze(0),
-            )
+                edited_image = edited_image[0, ...].to('cpu', dtype=torch.float32)
+                # resize to original image size (often not necessary)
+                # if (edited_image.size() != image.size()):
+                #     edited_image = torch.nn.functional.interpolate(edited_image,
+                #                                                    size=image.size()[2:],
+                #                                                    mode='bilinear')
+                #set_trace()
+                # write edited image to dataloader
+                plt.imshow(edited_image.cpu().permute(1,2,0).detach().numpy())
+                plt.savefig(f'output/edited_image_{iteration}.png')
+                plt.close()
 
-            #edited_image = edited_image[0, ...].to(device, dtype=torch.float32)
-            # resize to original image size (often not necessary)
-            # if (edited_image.size() != image.size()):
-            #     edited_image = torch.nn.functional.interpolate(edited_image,
-            #                                                    size=image.size()[2:],
-            #                                                    mode='bilinear')
-            #set_trace()
-            # write edited image to dataloader
-            scene.updateTrainCameraImage(viewpoint_id, edited_image)
+                plt.imshow(image.cpu().permute(1,2,0).detach().numpy())
+                plt.savefig(f'output/rendered_image_{iteration}.png')
+                plt.close()
+
+                plt.imshow(original_image.cpu().permute(1,2,0).detach().numpy())
+                plt.savefig(f'output/original_image_{iteration}.png')
+                plt.close()
+                scene.updateTrainCameraImage(viewpoint_id, edited_image)
 
         iter_end.record()
 
@@ -272,8 +284,8 @@ if __name__ == "__main__":
     parser.add_argument('--port', type=int, default=6009)
     parser.add_argument('--debug_from', type=int, default=-1)
     parser.add_argument('--detect_anomaly', action='store_true', default=False)
-    parser.add_argument("--test_iterations", nargs="+", type=int, default=[2_00, 7_000, 30_000])
-    parser.add_argument("--save_iterations", nargs="+", type=int, default=[2_00, 7_000, 30_000])
+    parser.add_argument("--test_iterations", nargs="+", type=int, default=[7_000, 30_000])
+    parser.add_argument("--save_iterations", nargs="+", type=int, default=[7_000, 30_000])
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--checkpoint_iterations", nargs="+", type=int, default=[])
     parser.add_argument("--start_checkpoint", type=str, default=None)
