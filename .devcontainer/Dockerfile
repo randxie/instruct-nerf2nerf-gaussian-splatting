@@ -1,5 +1,6 @@
 FROM nvidia/cuda:11.7.1-cudnn8-devel-ubuntu22.04
 
+ENV CERES_SOLVER_VERSION=2.1.0
 ENV COLMAP_VERSION=3.7
 ENV CMAKE_VERSION=3.21.0
 ENV OPENCV_VERSION=4.5.5.62
@@ -63,3 +64,28 @@ RUN echo "Installing apt packages..." \
     && alias python=python3.9
 
 RUN python3.9 -m pip install --no-cache-dir torch torchvision torchaudio
+
+RUN echo "Installing Ceres Solver ver. ${CERES_SOLVER_VERSION}..." \
+	&& cd /opt \
+	&& git clone https://github.com/ceres-solver/ceres-solver \
+	&& cd ./ceres-solver \
+	&& git checkout ${CERES_SOLVER_VERSION} \
+	&& mkdir ./build \
+	&& cd ./build \
+	&& cmake ../ -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF \
+	&& make -j \
+	&& make install \
+    && rm -r build
+
+RUN echo "Installing COLMAP ver. ${COLMAP_VERSION}..." \
+	&& cd /opt \
+	&& git clone https://github.com/colmap/colmap \
+	&& cd ./colmap \
+	&& git checkout ${COLMAP_VERSION} \
+	&& mkdir ./build \
+	&& cd ./build \
+	&& cmake -DCUDA_NVCC_FLAGS="--std c++14" ../ \
+	&& make -j \
+	&& make install \
+	&& colmap -h \
+    && rm -r build
