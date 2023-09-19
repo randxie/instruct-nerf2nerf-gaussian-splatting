@@ -95,7 +95,8 @@ def training(
             gaussians.oneupSHdegree()
 
         # Pick a random Camera
-        if not viewpoint_stack:
+        # Always do the copy so we can leverage the edited image
+        if True:
             viewpoint_stack = scene.getTrainCameras().copy()
 
         viewpoint_id = randint(0, len(viewpoint_stack) - 1)
@@ -116,39 +117,6 @@ def training(
         Ll1 = l1_loss(image, gt_image)
         loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image))
         loss.backward()
-
-        # every 50 iterations, do 1 image editing using instruct-pix2pix
-        # edit an image every ``edit_rate`` steps
-        if (iteration % args.edit_rate == 0):
-            with torch.no_grad():
-                # get original image from dataset
-                original_image = viewpoint_cam.original_image.to(diff_device)
-
-                edited_image = ip2p_model.edit_image(
-                    text_embedding.to(diff_device),
-                    image.to(diff_device, dtype=torch.float16).unsqueeze(0),
-                    original_image.to(diff_device, dtype=torch.float16).unsqueeze(0),
-                )
-
-                # resize to original image size (often not necessary)
-                if (edited_image.size()[1:] != image.size()):
-                    edited_image = torch.nn.functional.interpolate(edited_image, size=image.size()[1:], mode='bilinear')
-
-                edited_image = edited_image[0, ...].to('cpu', dtype=torch.float32)
-                #set_trace()
-                # write edited image to dataloader
-                plt.imshow(edited_image.cpu().permute(1, 2, 0).detach().numpy())
-                plt.savefig(f'output/edited_image_{iteration}.png')
-                plt.close()
-
-                plt.imshow(image.cpu().permute(1, 2, 0).detach().numpy())
-                plt.savefig(f'output/rendered_image_{iteration}.png')
-                plt.close()
-
-                plt.imshow(original_image.cpu().permute(1, 2, 0).detach().numpy())
-                plt.savefig(f'output/original_image_{iteration}.png')
-                plt.close()
-                scene.updateTrainCameraImage(viewpoint_id, edited_image)
 
         iter_end.record()
 
@@ -191,6 +159,40 @@ def training(
             if (iteration in checkpoint_iterations):
                 print("\n[ITER {}] Saving Checkpoint".format(iteration))
                 torch.save((gaussians.capture(), iteration), scene.model_path + "/chkpnt" + str(iteration) + ".pth")
+
+        # every edit iterations, do 1 image editing using instruct-pix2pix
+        # edit an image every ``edit_rate`` steps
+        if (iteration % args.edit_rate == 0):
+            with torch.no_grad():
+                # get original image from dataset
+                original_image = viewpoint_cam.original_image.to(diff_device, dtype=torch.float16).unsqueeze(0)
+
+                edited_image = ip2p_model.edit_image(
+                    text_embedding.to(diff_device),
+                    image.detach().to(diff_device, dtype=torch.float16).unsqueeze(0),
+                    original_image,
+                )
+
+                # resize to original image size (often not necessary)
+                if (edited_image.size()[1:] != image.size()):
+                    edited_image = torch.nn.functional.interpolate(edited_image, size=image.size()[1:], mode='bilinear')
+
+                edited_image = edited_image[0, ...].to('cpu', dtype=torch.float32)
+                #set_trace()
+                # write edited image to dataloader
+                plt.imshow(edited_image.detach().cpu().permute(1, 2, 0).numpy())
+                plt.savefig(f'output/edited_image_{iteration}.png')
+                plt.close()
+
+                plt.imshow(image.detach().cpu().permute(1, 2, 0).numpy())
+                plt.savefig(f'output/rendered_image_{iteration}.png')
+                plt.close()
+
+                plt.imshow(original_image[0, ...].detach().to('cpu', dtype=torch.float32).permute(1, 2, 0).numpy())
+                plt.savefig(f'output/original_image_{iteration}.png')
+                plt.close()
+                scene.updateTrainCameraImage(viewpoint_id, edited_image)
+
 
 
 def prepare_output_and_logger(args):
