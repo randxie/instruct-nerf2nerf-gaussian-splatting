@@ -24,6 +24,7 @@ except ImportError:
 
 from IPython.core.debugger import set_trace
 
+
 def training(
     dataset,
     opt,
@@ -129,23 +130,22 @@ def training(
                     original_image.to(diff_device, dtype=torch.float16).unsqueeze(0),
                 )
 
-                edited_image = edited_image[0, ...].to('cpu', dtype=torch.float32)
                 # resize to original image size (often not necessary)
-                # if (edited_image.size() != image.size()):
-                #     edited_image = torch.nn.functional.interpolate(edited_image,
-                #                                                    size=image.size()[2:],
-                #                                                    mode='bilinear')
+                if (edited_image.size()[1:] != image.size()):
+                    edited_image = torch.nn.functional.interpolate(edited_image, size=image.size()[1:], mode='bilinear')
+
+                edited_image = edited_image[0, ...].to('cpu', dtype=torch.float32)
                 #set_trace()
                 # write edited image to dataloader
-                plt.imshow(edited_image.cpu().permute(1,2,0).detach().numpy())
+                plt.imshow(edited_image.cpu().permute(1, 2, 0).detach().numpy())
                 plt.savefig(f'output/edited_image_{iteration}.png')
                 plt.close()
 
-                plt.imshow(image.cpu().permute(1,2,0).detach().numpy())
+                plt.imshow(image.cpu().permute(1, 2, 0).detach().numpy())
                 plt.savefig(f'output/rendered_image_{iteration}.png')
                 plt.close()
 
-                plt.imshow(original_image.cpu().permute(1,2,0).detach().numpy())
+                plt.imshow(original_image.cpu().permute(1, 2, 0).detach().numpy())
                 plt.savefig(f'output/original_image_{iteration}.png')
                 plt.close()
                 scene.updateTrainCameraImage(viewpoint_id, edited_image)
