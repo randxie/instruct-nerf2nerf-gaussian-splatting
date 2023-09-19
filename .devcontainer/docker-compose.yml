@@ -11,6 +11,8 @@ services:
     environment:
       NVIDIA_DRIVER_CAPABILITIES: compute,utility,graphics
       DISPLAY: $DISPLAY
+      XDG_RUNTIME_DIR: /tmp/runtime-root
+      LIBGL_DEBUG: verbose
     volumes:
       - ../:/volume
       - /tmp/.X11-unix:/tmp/.X11-unix

@@ -40,7 +40,6 @@ except ImportError:
     sys.exit(1)
 
 logging.set_verbosity_error()
-IMG_DIM = 512
 CONST_SCALE = 0.18215
 
 DDIM_SOURCE = "CompVis/stable-diffusion-v1-4"

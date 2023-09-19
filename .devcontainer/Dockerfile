@@ -5,6 +5,21 @@ ENV COLMAP_VERSION=3.7
 ENV CMAKE_VERSION=3.21.0
 ENV OPENCV_VERSION=4.5.5.62
 
+# Specify your CUDA architecture, separated by ";"
+ARG CUDA_ARCHITECTURES=80
+ARG USER_ID=1000
+
+# Create non root user and setup environment.
+RUN useradd -m -d /home/user -g root -G sudo -u ${USER_ID} user
+RUN usermod -aG sudo user
+# Set user password
+RUN echo "user:user" | chpasswd
+# Ensure sudo group users are not asked for a password when using sudo command by ammending sudoers file
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+# Switch to new uer and workdir.
+USER ${USER_ID}
+
 RUN echo "Installing apt packages..." \
 	&& export DEBIAN_FRONTEND=noninteractive \
 	&& apt -y update --no-install-recommends \
@@ -30,6 +45,7 @@ RUN echo "Installing apt packages..." \
     libgtk-3-dev \
     libavdevice-dev \
     libavcodec-dev \
+    libgl1-mesa-glx \
     libxxf86vm-dev \
     libembree-dev \
     libassimp-dev \
